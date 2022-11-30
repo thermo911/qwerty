@@ -1,5 +1,6 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
+import { timeStamp } from 'console';
 import * as vscode from 'vscode';
 
 interface IQueue<T> {
@@ -52,23 +53,33 @@ class TypingListener {
 
         vscode.window.onDidChangeTextEditorSelection(this.onTypingEvent, this, []);
 
-        this.updateInfo();
+
+        setInterval(() => {this.updateInfo(new Date().getTime())}, 500);
+		this.updateInfo
 		this.statusBar.show();
     }
 
-	updateInfo() {
-		let nowMs = new Date().getTime();
+	private updateInfo(nowMs: number) {
+		this.removeOlds(nowMs);
+
 		let firstMs = this.queue.first();
 		if (firstMs === undefined) {
 			firstMs = 0;
 		}
 		let diff = nowMs - firstMs;
-		this.queue.enqueue(nowMs);
 		this.statusBar.text = `${Math.round(60000 * this.queue.size() / diff)} tpm`;
 	}
 
+	private removeOlds(nowMs: number) {
+		let t: number | undefined;
+		while ((t = this.queue.first()) !== undefined && nowMs - t > 5000) {
+			this.queue.dequeue();
+		}
+	}
+
     private onTypingEvent() {
-        this.updateInfo();
+		this.queue.enqueue(new Date().getTime());
+        // this.updateInfo();
     }
 
 	dispose() {
